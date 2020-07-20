@@ -1,3 +1,5 @@
+#!/bin/bash
+
 CUDA_VISIBLE_DEVICES=1 fairseq-train \
     data-bin/iwslt14.tokenized.de-en \
     --arch lstm_luong_wmt_en_de  \

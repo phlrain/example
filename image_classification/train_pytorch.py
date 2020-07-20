@@ -116,16 +116,15 @@ def train(train_loader, model, criterion, optimizer, epoch):
     # switch to train mode
     model.train()
 
-    data_start_time = time.time()
+    torch.backends.cudnn.benchmark = True
+
+    batch_start = time.time()
     for i, (input, target) in enumerate(train_loader):
         # measure data loading time
-        data_end_time = time.time()
+        batch_reader_end = time.time()
 
-        compute_start_time = time.time()
         input, target = input.to(device), target.to(device)
         optimizer.zero_grad()
-
-        compute_start_time = time.time()
 
         # forward
         output = model(input)
@@ -141,11 +140,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
         optimizer.step()
 
         # measure elapsed time
-        compute_end_time = time.time()
-        if i % 50 == 0:
-            print('Epoch: [%d][%d/%d] avg_loss %0.5f acc_top1 %0.5f acc_top5 %0.5f forward_backward %2.4f read_t: %2.4f' % (epoch, i, len(train_loader), loss, prec1, prec5, compute_end_time - compute_start_time, data_end_time - data_start_time))
-        # print('Epoch: [%d][%d/%d] avg_loss %0.5f forward_backward %2.4f read_t: %2.4f' % (epoch, i, len(train_loader), loss, compute_end_time - compute_start_time, data_end_time - data_start_time))
-        data_start_time = time.time()
+        train_batch_cost = time.time() - batch_start
+        if i % 10 == 0:
+            print('Epoch: [%d][%d/%d] avg_loss %.5f, acc_top1 %.5f, acc_top5 %.5f, batch_cost: %.5f s, reader_cost: %.5f' % (epoch, i, len(train_loader), loss, prec1, prec5, train_batch_cost, batch_reader_end - batch_start))
+        batch_start = time.time()
 
 best_prec1 = 0
 

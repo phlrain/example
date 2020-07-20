@@ -24,10 +24,6 @@ from fairseq.data import iterators
 from fairseq.trainer import Trainer
 from fairseq.meters import StopwatchMeter
 
-import cProfile
-
-pr = cProfile.Profile()
-
 logging.basicConfig(
     format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
@@ -174,7 +170,6 @@ def train(args, trainer, task, epoch_itr):
     max_update = args.max_update or math.inf
 
     start_time = time.time()
-    #pr.enable()
     step = 0
     for samples in progress:
         log_output = trainer.train_step(samples)
@@ -193,7 +188,6 @@ def train(args, trainer, task, epoch_itr):
         step += 1
         """
         
-
         if log_output is None:
             continue
 
@@ -207,18 +201,19 @@ def train(args, trainer, task, epoch_itr):
             and num_updates % args.save_interval_updates == 0
             and num_updates > 0
         ):
+            print("validate and save_checkpoint")
             valid_losses = validate(args, trainer, task, epoch_itr, valid_subsets)
             checkpoint_utils.save_checkpoint(args, trainer, epoch_itr, valid_losses[0])
 
         if num_updates >= max_update:
             break
+
+    train_epoch_cost = time.time() - start_time
     
     # log end-of-epoch stats
-    end_time = time.time()
     stats = get_training_stats(metrics.get_smoothed_values('train'))
     progress.print(stats, tag='train', step=num_updates)
-
-    print( "one epoch cost", end_time - start_time )
+    print("epoch_cost: %.5f s, avg_speed: %.5f steps/s" % (train_epoch_cost, float(step) / train_epoch_cost))
 
     # reset epoch-level meters
     metrics.reset_meters('train')
